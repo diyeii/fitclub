@@ -2,177 +2,185 @@
 
 # 💪 FitClub
 
-> *Gestión de un gimnasio con clases dirigidas*
+> *Reservas de un gimnasio*
 
 **Modalidad:** trabajo en grupo (≈5 alumnos/as)
 **Duración estimada:** 3–4 semanas
-**Entrega:** repositorio en GitHub + presentación oral del proyecto
+**Entrega:** repositorio en GitHub + presentación oral
 
 ---
 
-## 1. Objetivo general
+## 1. Qué hay que hacer
 
-Vuestro grupo desarrollará una aplicación Java de escritorio que integre **todo lo aprendido durante el curso**: programación orientada a objetos, organización del código con **Maven multimódulo**, persistencia con **JDBC** sobre **MySQL**, interfaz gráfica con **Swing**, control de versiones con **Git/GitHub** y despliegue del entorno con **Docker**.
+Vuestro grupo desarrollará una **aplicación de consola** en Java que se conecta a una base de datos MySQL para gestionar la información de un negocio. La app muestra un menú por consola, el usuario elige una opción escribiendo un número, y la aplicación lee/escribe en la base de datos.
 
-El producto final no es solo el código: es también la documentación, la organización del trabajo en equipo y el repositorio limpio.
+No es una aplicación complicada: es básicamente un **CRUD** (altas, bajas, modificaciones y consultas) sobre 3 entidades, con alguna pequeña operación extra del negocio.
 
 ---
 
-## 2. Requisitos técnicos comunes (obligatorios)
+## 2. Requisitos técnicos (lo mínimo que tiene que tener)
 
-| Requisito | Descripción mínima |
+| Requisito | Detalle |
 |---|---|
 | **Java** | Java 21 |
-| **Maven multimódulo** | Proyecto padre con al menos 4 módulos (ver §4) |
-| **MySQL + JDBC** | Sin ORMs. Acceso a datos con `Connection`, `PreparedStatement`, `ResultSet` y patrón **DAO** |
-| **Swing** | Interfaz gráfica con varias ventanas/pestañas. Validación de formularios |
-| **GitHub** | Repositorio público o de la organización del centro. Uso real de **ramas y Pull Requests** |
-| **Docker** | `docker-compose.yml` que levante MySQL (y opcionalmente phpMyAdmin) con los datos del proyecto |
-| **Documentación** | `README.md` profesional + diagrama E/R + capturas de la app |
+| **Maven multimódulo** | Proyecto padre con **2 módulos**: `core` y `app` (ver §3) |
+| **MySQL + JDBC** | Conexión a MySQL con `Connection` y `PreparedStatement`. **Nada de `Statement` con concatenación de Strings** |
+| **Interfaz** | Aplicación de consola: bucle + `Scanner` + menús con opciones numeradas. Sin GUI |
+| **GitHub** | Un repositorio por grupo, con **commits de cada miembro del equipo** |
+| **Docker** | Un `docker-compose.yml` que levante MySQL con un script de creación de tablas |
+| **Documentación** | Un `README.md` con cómo arrancarlo y un diagrama del modelo de datos |
 
-> **No vale** una app monolítica con un único `main()` y SQL embebido en los `JButton`. Si veo `Statement` con concatenación de strings en vez de `PreparedStatement`, baja la nota automáticamente (y abre la puerta a inyección SQL, que ya hemos visto en clase).
-
----
-
-## 3. Tecnologías que **no** se permiten
-
-Para asegurar que se aplica lo estudiado:
-
-- **Sin Hibernate, JPA ni Spring Data**. El acceso a datos se hace a mano con JDBC.
-- **Sin JavaFX**. La interfaz va en Swing.
-- **Sin frameworks web** (esto va para los pícaros). Es una aplicación de escritorio.
-- Se permiten librerías auxiliares pequeñas: por ejemplo `mysql-connector-j`, `slf4j` + `logback`, `junit-jupiter` para tests, `jcalendar` o similar para selectores de fecha si lo necesitáis.
+> Si veo `Statement` con `+` concatenando lo que escribe el usuario, baja la nota: hemos visto en clase que eso es inyección SQL.
 
 ---
 
-## 4. Estructura recomendada del proyecto Maven
+## 3. Estructura del proyecto Maven
+
+Solo hace falta partir el proyecto en **2 módulos**:
 
 ```
-proyecto-padre/                 ← pom.xml de tipo "pom" (parent)
+proyecto-padre/                  ← pom.xml padre (packaging=pom)
 ├── pom.xml
 ├── docker/
-│   ├── docker-compose.yml       ← servicio "db" con MySQL 8
-│   └── init.sql                 ← script de creación de tablas + datos de prueba
-├── core/                        ← modelo de dominio + lógica de negocio
+│   ├── docker-compose.yml        ← servicio MySQL 8
+│   └── init.sql                  ← CREATE TABLE + INSERTs de datos de prueba
+├── core/                         ← clases del modelo (POJOs) + DAOs (JDBC)
 │   ├── pom.xml
 │   └── src/main/java/com/<grupo>/core/...
-├── persistence/                 ← DAOs e interfaces de persistencia (JDBC)
-│   ├── pom.xml
-│   └── src/main/java/com/<grupo>/persistence/...
-├── ui/                          ← interfaz Swing (JFrames, paneles, modelos de tabla)
-│   ├── pom.xml
-│   └── src/main/java/com/<grupo>/ui/...
-└── app/                         ← módulo ensamblador con la clase Main
+└── app/                          ← clase Main + menús de consola
     ├── pom.xml
     └── src/main/java/com/<grupo>/app/Main.java
 ```
 
-**Dependencias entre módulos:**
+- **`core`**: las clases que representan el modelo (una por entidad) y las clases DAO con los métodos para hablar con la base de datos (`insertar`, `buscarPorId`, `listarTodos`, `actualizar`, `borrar`).
+- **`app`**: la clase `Main` y todo lo relacionado con los menús de consola y la lectura por `Scanner`.
+- `app` depende de `core`. `core` no depende de nadie.
 
-- `persistence` depende de `core`
-- `ui` depende de `core`
-- `app` depende de `ui`, `persistence` y `core`
-- `core` no depende de nadie (es el corazón del dominio)
-
-El módulo `app` debe generar un **fat jar ejecutable** (`maven-shade-plugin` o `maven-assembly-plugin`) de manera que `java -jar app.jar` lance la aplicación.
+Una sola clase `ConexionBD` en `core` que devuelva una `Connection` con los datos del MySQL del docker-compose es suficiente.
 
 ---
 
-## 5. Cómo organizar el trabajo en el equipo (5 personas)
+## 4. Restricciones de diseño (para no liarla)
 
-Reparto orientativo. **Todos** tocan código de todos los módulos en algún momento, pero cada cual lidera un área:
-
-| Rol | Responsabilidad principal |
-|---|---|
-| **Coordinador / DevOps** | Estructura Maven multimódulo, `docker-compose.yml`, organización del repo de GitHub, gestión de ramas y PRs, integración continua manual, README final |
-| **Backend — Persistencia** | Diseño del modelo E/R, `init.sql`, conexión JDBC, DAOs, manejo de transacciones |
-| **Backend — Dominio** | Clases del módulo `core`, servicios, validaciones, reglas de negocio, tests JUnit |
-| **Frontend — Gestión** | Pantallas Swing de mantenimiento (CRUDs): altas, bajas, modificaciones, búsquedas |
-| **Frontend — Operación** | Pantallas Swing del flujo principal del negocio (las "interesantes": reservas, pedidos, brackets, préstamos…) + integración final |
-
-> Cada miembro del equipo debe tener **commits propios** en GitHub. Si todos los commits los hace una sola persona, **eso se penaliza**. La gráfica de contributors la voy a mirar.
+- **Sin Hibernate, JPA ni Spring**. JDBC a mano, como en clase.
+- **Sin Swing, JavaFX ni interfaces gráficas**. Todo por consola.
+- **Sin frameworks web**.
+- **Sin `enum`**. Si un campo solo admite unos valores concretos (por ejemplo `"PENDIENTE"` / `"ENTREGADO"` / `"CANCELADO"`), se guarda como **`String`** y los valores válidos se documentan en un comentario en la clase.
+- **Sin herencia ni clases abstractas en el modelo**. Cada entidad es una clase normal con sus atributos, su constructor y sus getters/setters.
 
 ---
 
-## 6. Flujo de trabajo en GitHub (obligatorio)
+## 5. Cómo debe ser la interfaz de consola
 
-1. Una persona crea el repositorio y añade al resto como colaboradores.
-2. Rama `main` **protegida**: nadie hace push directo.
-3. Cada funcionalidad se desarrolla en una rama: `feature/login`, `feature/dao-cliente`, `fix/calculo-total`…
-4. Para integrar a `main` se abre un **Pull Request** que **otro compañero/a** debe revisar y aprobar.
-5. Mensajes de commit con sentido (`feat: añadir DAO de pedidos`, no `asdfasdf`).
-6. Issues de GitHub para repartir tareas.
+Un bucle `while` que muestra un menú numerado, lee un número con `Scanner` y entra en un `switch`. Algo así:
+
+```
+========================================
+  NOCHEDEPIZZA
+========================================
+  1) Gestionar clientes
+  2) Gestionar productos
+  3) Gestionar pedidos
+  0) Salir
+----------------------------------------
+Elige una opción:
+```
+
+Cada opción del menú principal abre un **submenú** con su propio bucle (Listar / Crear / Modificar / Eliminar / Volver) hasta que el usuario elige "Volver".
+
+Lo que sí se valora:
+
+- Que **no se rompa la app** si el usuario escribe una letra cuando se espera un número.
+- Que los listados se muestren con un formato legible (no un volcado feo).
+- Pedir confirmación antes de borrar (`¿Seguro? (s/n)`).
+- Cerrar la conexión a la base de datos al salir.
 
 ---
 
-## 7. Docker — Despliegue del entorno
+## 6. GitHub
 
-En la carpeta `docker/` debe haber un `docker-compose.yml` que levante al menos:
+- Un repositorio por grupo. Una persona lo crea y añade al resto como colaboradores.
+- **Cada miembro del equipo debe tener commits propios**. Si todos los commits los hace una sola persona, se penaliza. Voy a mirar la pestaña de "Contributors".
+- Mensajes de commit con sentido (`Añade DAO de clientes`, no `asdfasdf`).
+- Buena práctica recomendada (no obligatoria): trabajar en ramas y fusionar a `main` con Pull Requests.
 
-- **MySQL 8.x** con un volumen persistente, usuario y contraseña en variables de entorno, y el `init.sql` montado para que se cargue al arrancar.
-- (Opcional pero recomendado) **phpMyAdmin** o **adminer** para depuración.
+---
 
-La aplicación Swing **se ejecuta en el equipo del usuario**, no dentro de un contenedor (los contenedores con GUI se complican y no entra en el alcance del curso). Solo dockerizamos la base de datos.
+## 7. Docker
 
-El `README.md` debe incluir las instrucciones exactas:
+En la carpeta `docker/` debe haber un `docker-compose.yml` que levante:
+
+- **MySQL 8** con usuario, contraseña y base de datos en variables de entorno.
+- El fichero `init.sql` montado para que MySQL lo ejecute al arrancar (creación de tablas + datos de prueba).
+
+La aplicación Java se ejecuta en el equipo del usuario (no dentro de un contenedor). Solo dockerizamos la base de datos.
+
+El `README.md` debe explicar cómo arrancarlo, por ejemplo:
 
 ```bash
 cd docker
 docker compose up -d
 cd ..
 mvn clean package
-java -jar app/target/app-<version>-shaded.jar
+java -jar app/target/app.jar
 ```
 
 ---
 
-## 8. Entregables
+## 8. Reparto del trabajo (grupos de 5)
 
-1. **URL del repositorio de GitHub** (un único repo por grupo).
-2. **Memoria técnica** (en el README o en un PDF dentro del repo) con:
-   - Descripción del proyecto
-   - Diagrama de clases (módulo `core`)
-   - Diagrama Entidad/Relación de la BD
-   - Capturas de cada pantalla
-   - Instrucciones de instalación y ejecución
-   - Reparto real de tareas y enlace a los PRs de cada miembro
-3. **Presentación oral** de 10–15 minutos con demo en vivo. Todos los miembros intervienen.
+Una sugerencia razonable es que **cada miembro se encargue de una entidad de principio a fin** (su clase del modelo, su DAO y los menús asociados), y los dos miembros restantes hagan:
+
+- La **infraestructura común**: estructura Maven, `ConexionBD`, `docker-compose.yml`, `init.sql`, README, organización de GitHub.
+- El **menú principal** y la integración de los menús de los compañeros.
+
+Lo importante es que **todos toquéis código** y haya commits de todos en GitHub. No vale el clásico "yo es que no sé hacer eso".
 
 ---
 
-## 9. Criterios de evaluación
+## 9. Entregables
+
+1. **Enlace al repositorio de GitHub**.
+2. **README** con:
+   - Descripción del proyecto.
+   - Diagrama del modelo de datos (puede ser una imagen, una tabla o un dibujo).
+   - Instrucciones para arrancarlo.
+   - Quién ha hecho qué.
+3. **Presentación oral** de 10 minutos con demo en vivo.
+
+---
+
+## 10. Cómo se evalúa
 
 | Bloque | Peso |
 |---|---|
-| Funcionalidad implementada (que el proyecto **funcione**) | 30% |
-| Calidad del código y arquitectura multimódulo | 20% |
-| Acceso a datos (JDBC, DAOs, integridad) | 15% |
-| Interfaz gráfica (usabilidad, validaciones) | 15% |
-| Uso real de Git/GitHub (commits repartidos, PRs, ramas) | 10% |
-| Documentación + Docker reproducible | 10% |
+| Que el proyecto **funcione** (CRUDs operativos, sin crashes) | 35% |
+| Acceso a datos correcto (JDBC, `PreparedStatement`, DAOs) | 20% |
+| Estructura del proyecto Maven multimódulo | 15% |
+| Interfaz de consola (claridad, validación de entrada) | 10% |
+| Uso de Git/GitHub (commits repartidos) | 10% |
+| Documentación + Docker funcionando | 10% |
 
 ---
 
-## 10. Plus opcionales (subida de nota)
+## 11. Plus opcionales (subida de nota)
 
-- **Login y roles**: pantalla de autenticación con varios tipos de usuario (admin/operador) y permisos distintos.
-- **Hash de contraseñas** con `BCrypt` o similar (no guardarlas en claro).
-- **Exportar a CSV o PDF** algún listado o informe.
-- **Logging** con SLF4J + Logback en lugar de `System.out.println`.
-- **Tests JUnit** del módulo `core` con cobertura razonable.
-- **Internacionalización (i18n)** con archivos `messages_es.properties` / `messages_en.properties`.
-- **GitHub Actions** que ejecute `mvn verify` en cada PR.
+- **Login** sencillo: usuario y contraseña en una tabla `usuarios`, comparar al arrancar.
+- **Exportar a CSV** alguno de los listados.
+- **Datos de prueba abundantes** en el `init.sql` (mínimo 10 filas por tabla).
+- **Trabajar con ramas y Pull Requests** en GitHub (en vez de hacer push directo a `main`).
+- **Filtros y ordenación** en los listados (por ejemplo, ordenar por fecha o filtrar por nombre).
 
 ---
 
-## 11. Calendario sugerido
+## 12. Calendario sugerido
 
 | Semana | Hito |
 |---|---|
-| 1 | Reparto de roles, diseño del E/R, repo de GitHub creado, `docker-compose.yml` levantando MySQL, esqueleto Maven multimódulo compilando |
-| 2 | DAOs y módulo `core` listos. Primeras pantallas Swing de mantenimiento. Tests del `core` |
-| 3 | Flujo principal del negocio funcionando end-to-end |
-| 4 | Plus, pulido, memoria técnica, capturas, ensayo de la presentación |
+| 1 | Repartir entidades. Repo de GitHub creado. `docker-compose.yml` levantando MySQL. Esqueleto Maven con los 2 módulos compilando. `init.sql` con las tablas. |
+| 2 | Cada cual termina su clase del modelo + DAO. Al final de la semana se puede insertar y listar desde Java. |
+| 3 | Menús de consola completos. La app funciona de punta a punta. |
+| 4 | Pulir, plus opcionales, README, ensayo de la presentación. |
 
 ---
 
@@ -181,40 +189,36 @@ java -jar app/target/app-<version>-shaded.jar
 
 ### Contexto
 
-FitClub es un gimnasio de barrio con sala de musculación y clases dirigidas (spinning, zumba, yoga, body-pump…). Quieren una aplicación para gestionar a los socios, programar las clases del mes, controlar las reservas con aforo limitado y llevar el control de las cuotas mensuales.
+FitClub es un gimnasio de barrio con clases dirigidas (spinning, yoga, zumba…). Los socios pueden reservar plaza en las clases que les interesan, pero el aforo es limitado. Queréis hacer una aplicación para gestionar socios, clases y reservas.
 
-### Entidades principales (mínimo)
+### Entidades (3)
 
-- **Socio**: `id`, `nombre`, `apellidos`, `email`, `teléfono`, `fecha_alta`, `tipo_cuota` (MENSUAL/TRIMESTRAL/ANUAL), `activo`
-- **Profesor**: `id`, `nombre`, `apellidos`, `especialidades` (puede ser una relación N:M con tipos de clase)
-- **TipoClase**: `id`, `nombre`, `descripción`, `duración_min`, `aforo_max`
-- **Sesión**: `id`, `tipo_clase_id`, `profesor_id`, `fecha_hora`, `estado` (PROGRAMADA/REALIZADA/CANCELADA)
-- **Reserva**: `id`, `sesión_id`, `socio_id`, `fecha_reserva`, `asistio`
-- **Cuota**: `id`, `socio_id`, `mes`, `año`, `importe`, `pagada`, `fecha_pago`
+- **Socio**: `id`, `nombre`, `apellidos`, `email`, `teléfono`
+- **Clase**: `id`, `nombre`, `profesor`, `fecha_hora`, `aforo_max`
+- **Reserva**: `id`, `socio_id`, `clase_id`, `fecha_reserva`
 
-### Casos de uso obligatorios
+### Funcionalidades
 
-1. CRUD de **socios**, **profesores** y **tipos de clase**.
-2. **Programar sesión**: seleccionar tipo de clase, profesor (que la imparta), fecha y hora. Validar que el profesor no tiene otra sesión a esa hora.
-3. **Reservar plaza** en una sesión: validar que el socio está al día con las cuotas, que la sesión está PROGRAMADA y que **queda aforo**.
-4. **Cancelar reserva**: con política (p. ej., hasta 2h antes del inicio).
-5. **Marcar asistencia** al cierre de la sesión.
-6. **Generar cuotas mensuales**: botón "Generar cuotas del mes" que crea automáticamente la cuota del mes para todos los socios activos.
-7. **Listar morosos** (socios con cuotas no pagadas) y permitir marcar la cuota como pagada.
-8. Informes: clases más demandadas, ocupación media de cada sesión, profesor con más asistentes.
+1. **CRUD de socios**: alta, listar, modificar, borrar.
+2. **CRUD de clases**: alta, listar, modificar, borrar.
+3. **Reservar plaza**: pedir un socio y una clase. Validar que **queden plazas libres** (que el número de reservas existentes para esa clase sea menor que `aforo_max`) y que ese socio no la haya reservado ya.
+4. **Cancelar reserva**: pedir un socio, mostrar sus reservas y permitir cancelar una.
+5. **Ver clases con plazas libres**: listar las clases futuras mostrando para cada una "X plazas libres de Y" (Y = aforo_max).
+6. **Ver reservas de un socio**: pedir un socio y mostrar todas sus reservas.
 
-### Pantallas Swing mínimas
+### Reglas sencillas
 
-- Calendario semanal/mensual con las sesiones programadas (puede ser un `JTable` con días en columnas).
-- Mantenimiento de socios, profesores y tipos de clase.
-- Pantalla "Reservar plaza" desde el calendario.
-- Panel de cuotas y morosos.
-- Informes.
+- No se puede reservar una clase que ya ha pasado (fecha anterior a hoy).
+- No se puede borrar un socio que tenga reservas activas.
 
-### Dificultades a tener en cuenta
+### Menú principal
 
-- La validación de aforo debe ser robusta: no se pueden hacer dos reservas simultáneas que dejen el aforo por encima del límite.
-- La generación de cuotas mensuales debe ser idempotente: si la pulsas dos veces el mismo mes, no debe duplicar las cuotas.
+```
+1) Socios
+2) Clases
+3) Reservas
+0) Salir
+```
 
 ---
 
