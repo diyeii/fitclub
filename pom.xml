@@ -10,12 +10,9 @@
     <packaging>pom</packaging>
 
     <name>FitClub Project Parent</name>
-
     <!-- 1. Definición de los módulos (carpetas) -->
     <modules>
         <module>core</module>
-        <module>persistence</module>
-        <module>ui</module>
         <module>app</module>
 
     </modules>
@@ -96,4 +93,4 @@
             </plugins>
         </pluginManagement>
     </build>
-</project>
+</project> 
