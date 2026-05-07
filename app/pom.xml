@@ -20,21 +20,13 @@
             <artifactId>core</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.fitclub</groupId>
-            <artifactId>persistence</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fitclub</groupId>
-            <artifactId>ui</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+
 
         <!-- Logger para ver por consola qué pasa al arrancar -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
         </dependency>
     </dependencies>
 </project>

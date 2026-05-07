@@ -15,4 +15,8 @@ public class Socio {
     private String email;
     private String number;
 
+    @Override
+    public String toString(){
+        return String.format("[%d] %s %s - %s tlfn:%s", id, name, surname, email, number);
+    }
 }

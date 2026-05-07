@@ -24,7 +24,7 @@
 
         <!-- Versiones de librerías -->
         <lombok.version>1.18.30</lombok.version>
-        <mysql.version>8.0.33</mysql.version>
+        <mysql.version>9.0.0</mysql.version>
         <slf4j.version>2.0.9</slf4j.version>
         <logback.version>1.4.11</logback.version>
         <junit.version>5.10.0</junit.version>
