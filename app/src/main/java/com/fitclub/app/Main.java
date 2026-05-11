@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
         int opcion;
 
         do {
@@ -18,7 +18,7 @@ public class Main {
             System.out.println("----------------------------------------");
             System.out.print("Elige una opción: ");
 
-            opcion = scanner.nextInt();
+            opcion = sc.nextInt();
 
             switch (opcion) {
                 case 1 -> System.out.println("\n>> Gestionar clientes (pendiente de implementar)\n");
