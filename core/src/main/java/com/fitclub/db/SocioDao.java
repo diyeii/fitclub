@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class SocioDAO {
+public class SocioDao {
 
     public void insertar(Socio socio) {
         String sql = "INSERT INTO socio (nombre, apellidos, email) VALUES (?, ?, ?)";
